@@ -1,55 +1,61 @@
-import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/interval';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/takeWhile';
-import 'rxjs/add/operator/do';
-
+import { DecimalPipe } from '@angular/common';
+import { Component, OnDestroy, computed, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
+  imports: [DecimalPipe, FormsModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
+  readonly max = signal(10);
+  readonly current = signal(0);
+  readonly remaining = computed(() => Math.max(0, this.maxVal() - this.current()));
+  readonly progress = computed(() => Math.min(100, (this.currentVal() / this.maxVal()) * 100));
+  readonly isFinished = computed(() => this.currentVal() >= this.maxVal());
 
-  max     = 1;
-  current = 0;
+  private timerId?: ReturnType<typeof setInterval>;
 
-  start() {
-    const interval = Observable.interval(100);
-    
-    interval
-      .takeWhile(_ => !this.isFinished )
-      .do(i => this.current += 0.1)
-      .subscribe();
+  updateMax(value: string): void {
+    const seconds = Number(value);
+    this.max.set(Number.isFinite(seconds) && seconds > 0 ? seconds : 0.1);
+    this.reset();
   }
 
-   /// finish timer
-  finish() {
-    this.current = this.max;
+  start(): void {
+    this.clearTimer();
+    this.timerId = setInterval(() => {
+      const next = Math.min(this.maxVal(), this.current() + 0.1);
+      this.current.set(Number(next.toFixed(1)));
+      if (this.isFinished()) this.clearTimer();
+    }, 100);
   }
 
-  /// reset timer
-  reset() {
-    this.current = 0;
+  finish(): void {
+    this.current.set(this.maxVal());
+    this.clearTimer();
   }
 
-
-  /// Getters to prevent NaN errors
-
-  get maxVal() {
-    return isNaN(this.max) || this.max < 0.1 ? 0.1 : this.max;
+  reset(): void {
+    this.current.set(0);
+    this.clearTimer();
   }
 
-  get currentVal() {
-    return isNaN(this.current) || this.current < 0 ? 0 : this.current;
+  maxVal(): number {
+    return Number.isFinite(this.max()) && this.max() >= 0.1 ? this.max() : 0.1;
   }
 
-  get isFinished() {
-    return this.currentVal >= this.maxVal;
+  currentVal(): number {
+    return Number.isFinite(this.current()) && this.current() >= 0 ? this.current() : 0;
   }
 
+  ngOnDestroy(): void {
+    this.clearTimer();
+  }
 
-
+  private clearTimer(): void {
+    if (this.timerId) clearInterval(this.timerId);
+    this.timerId = undefined;
+  }
 }
