@@ -1,38 +1,35 @@
-<main class="content">
-        
-    <h1>Electron Timer</h1>
+<main class="timer-shell">
+  <section class="timer-card" aria-labelledby="timer-title">
+    <p class="eyebrow">FOCUS DESKTOP</p>
+    <h1 id="timer-title">Electron Timer</h1>
+    <p class="subtitle">A secure Angular and Electron focus timer.</p>
 
-    <div class="progress-wrapper" *ngIf="maxVal">
-
-        <div class="text" *ngIf="!isFinished">
-          {{ max - current | number: '1.1-1' }}
-        </div>
-        
-        <div class="text" *ngIf="isFinished">
-            ding!
-            <audio src="assets/chime.mp3" autoplay></audio>
-        </div>
-        
-        <round-progress
-                [max]="maxVal"
-                [current]="currentVal"
-                [radius]="100"
-                [stroke]="25">
-        </round-progress>
-        
+    <div class="progress-ring" [style.--progress]="progress() + '%'" role="progressbar"
+      [attr.aria-valuenow]="currentVal()" aria-valuemin="0" [attr.aria-valuemax]="maxVal()">
+      <div class="progress-center">
+        @if (isFinished()) {
+          <strong>Done!</strong>
+          <span>Time for a break</span>
+          <audio src="assets/chime.mp3" autoplay></audio>
+        } @else {
+          <strong>{{ remaining() | number: '1.1-1' }}</strong>
+          <span>seconds</span>
+        }
+      </div>
     </div>
 
-    <div class="controls-wrapper">
-            <div>
-              <label>Seconds</label>
-              <input class="input" placeholder="number of seconds" type="text" 
-              [(ngModel)]="max"
-              (keydown)="reset()">
-            </div>
-            
-        <button class="button is-info" *ngIf="currentVal <= 0" (click)="start()">Start</button>
-        <button class="button is-danger" *ngIf="!isFinished" (click)="finish()">Finish</button>
+    <label for="seconds">Timer duration</label>
+    <div class="input-row">
+      <input id="seconds" #seconds type="number" min="0.1" step="0.1" [value]="max()"
+        (change)="updateMax(seconds.value)" aria-describedby="seconds-help">
+      <span>seconds</span>
     </div>
+    <small id="seconds-help">Choose a positive duration, then start the timer.</small>
 
-
+    <div class="actions">
+      <button class="primary" type="button" (click)="start()">Start</button>
+      <button type="button" (click)="finish()" [disabled]="isFinished()">Finish</button>
+      <button type="button" (click)="reset()">Reset</button>
+    </div>
+  </section>
 </main>

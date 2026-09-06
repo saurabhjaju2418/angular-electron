@@ -1,27 +1,27 @@
-import { TestBed, async } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+
 describe('AppComponent', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
-      ],
-    }).compileComponents();
-  }));
-  it('should create the app', async(() => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({imports: [AppComponent]}).compileComponents();
+  });
+
+  it('creates the timer', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
-  }));
-  it(`should have as title 'app'`, async(() => {
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('finishes and resets the timer', () => {
+    const component = TestBed.createComponent(AppComponent).componentInstance;
+    component.finish();
+    expect(component.isFinished()).toBe(true);
+    component.reset();
+    expect(component.currentVal()).toBe(0);
+  });
+
+  it('renders the timer heading', async () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('app');
-  }));
-  it('should render title in a h1 tag', async(() => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain('Welcome to app!');
-  }));
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent).toContain('Electron Timer');
+  });
 });

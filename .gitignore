@@ -7,6 +7,7 @@ Release.key
 
 # compiled output
 /dist
+/.angular
 /tmp
 /out-tsc
 

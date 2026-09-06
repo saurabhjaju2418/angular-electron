@@ -1,46 +1,36 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, shell } = require('electron');
+const path = require('node:path');
 
-let win;
+let mainWindow;
 
-function createWindow () {
-  // Create the browser window.
-  win = new BrowserWindow({
-    width: 600, 
-    height: 600,
-    backgroundColor: '#ffffff',
-    icon: `file://${__dirname}/dist/assets/logo.png`
-  })
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 720,
+    height: 760,
+    minWidth: 420,
+    minHeight: 640,
+    backgroundColor: '#0b1020',
+    icon: path.join(__dirname, 'dist/angular-electron/browser/assets/logo.png'),
+    webPreferences: {contextIsolation: true, nodeIntegration: false, sandbox: true}
+  });
 
-
-  win.loadURL(`file://${__dirname}/dist/index.html`)
-
-
-
-
-  //// uncomment below to open the DevTools.
-  // win.webContents.openDevTools()
-
-  // Event when the window is closed.
-  win.on('closed', function () {
-    win = null
-  })
+  mainWindow.removeMenu();
+  mainWindow.loadFile(path.join(__dirname, 'dist/angular-electron/browser/index.html'));
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://')) void shell.openExternal(url);
+    return {action: 'deny'};
+  });
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  mainWindow.on('closed', () => { mainWindow = undefined; });
 }
 
-// Create window on electron intialization
-app.on('ready', createWindow)
+app.whenReady().then(() => {
+  createWindow();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-
-  // On macOS specific close process
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-app.on('activate', function () {
-  // macOS specific close process
-  if (win === null) {
-    createWindow()
-  }
-})
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
